@@ -4,6 +4,15 @@ import compression from 'compression';
 import * as sapper from '@sapper/server';
 import http from 'http';
 import io from 'socket.io';
+import redis from 'redis';
+
+let subscriber = redis.createClient();
+
+subscriber.on("message", function (channel, message) {
+ console.log("Message: " + message + " on channel: " + channel + " has arrived!");
+});
+
+subscriber.subscribe("notification");
 
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
@@ -25,26 +34,30 @@ let numUsers = 0;
 io(server).on('connection', function(socket) {
     ++numUsers;
     let message = 'Server: A new user has joined the chat';
-    socket.emit('user joined', { message, numUsers });
-    socket.broadcast.emit('user joined', { message, numUsers });
-
-    socket.on('message', function(msg) {
-        socket.broadcast.emit('message', msg);
-    })
+    socket.emit('message', 'connected: '+numUsers);
+    // socket.broadcast.emit('user joined', { message, numUsers });
+    //
+    // socket.on('message', function(msg) {
+    //     socket.broadcast.emit('message', msg);
+    // })
 
 
     socket.on('disconnect', function() {
         --numUsers;
-        socket.broadcast.emit('user left', numUsers);
+        // socket.broadcast.emit('user left', numUsers);
     })
 
-    socket.on('user disconnect', function(name) {
-        socket.broadcast.emit('message', `Server: ${name} has left the chat.`)
-    })
-    console.log(socket);
+    // socket.on('user disconnect', function(name) {
+    //     socket.broadcast.emit('message', `Server: ${name} has left the chat.`)
+    // })
+    // console.log(socket);
     setInterval(function(){ 
         // console.log("emit interval message");
-        if(numUsers>0) socket.emit('message', 'interval message '+socket.id);
+        let temp = [Date.now()/1000]
+        for (let i=1; i<4; i++) {
+            temp.push(100*Math.random());
+        }
+        if(numUsers>0) socket.emit('temp_data', temp);
     }, 3000);
 });
 

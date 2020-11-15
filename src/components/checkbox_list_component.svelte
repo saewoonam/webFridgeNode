@@ -16,8 +16,8 @@
       display: inline-block;
     }
 </style>
-<h2>toggle list</h2>
-<div >  
+<br>
+<div >
             <label>
             <input
             type=checkbox
