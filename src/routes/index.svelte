@@ -1,11 +1,26 @@
 <script>
+    import {onMount} from 'svelte';
     import Checkboxes from '../components/checkbox_list_component.svelte';
     import TempTable from '../components/temperature_table.svelte';
     import Uplot from '../components/uplot_v2.svelte';
     import io from "socket.io-client";
+    import StateSelector from '../components/state_selector.svelte';
 
     let plot_data;
     let title;
+    let mounted=0; // keep track of how many times the controls are updated
+    let selected;
+    let state_id = 2;
+    let states = [
+        {id: 1, text: 'manual'},
+        {id: 2, text: 'unknown'},
+        {id: 3, text: 'warming to 300K'},
+        {id: 4, text: 'cooling to 4K'},
+        {id: 5, text: 'Warm pump'},
+        {id: 6, text: 'Keep pump hot'},
+        {id: 7, text: 'Cool pump'},
+    ];
+
     const socket = io();
 
     socket.on("message", function(message) {
@@ -28,17 +43,20 @@
         //{ value: false, test: 'Enable heaters'}
     ];
     export let manual_mode = true;
-    $: {}//console.log(controls, manual_mode)};
-
-    let table_data = {'1k': 4.978491,
-                                        '4k':   3.070931,
-                                        'pump': 6.659844,
-                                        'switch':   17.41950,
-                                        'hp':   0.000000,
-                                        'hs':   4.000000,
-                                        'relays':   0,
-                                     }
-    var d = new Date();
+    $: {if (mounted>1) socket.emit("button", [manual_mode, controls]);
+        mounted++;
+    }
+    $: {console.log('state_id', state_id)}
+    $: {console.log('selected', selected)}
+    let table_data = {
+        '1k': 4.978491,
+        '4k':   3.070931,
+        'pump': 6.659844,
+        'switch':   17.41950,
+        'hp':   0.000000,
+        'hs':   4.000000,
+        'relays':   0,
+    }
     title = new Date().toLocaleString();
     plot_data = [
         [],
@@ -94,6 +112,7 @@
   <div class="column side">
     
         <TempTable table_data={table_data} title={title} />
+        <StateSelector bind:selected/>
         <Checkboxes bind:controls={controls} bind:manual_mode={manual_mode}/>
     </div>
   <div class="column main">

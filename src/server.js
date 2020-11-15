@@ -6,19 +6,25 @@ import http from 'http';
 import io from 'socket.io';
 import redis from 'redis';
 
-let subscriber = redis.createClient();
 
+const { PORT, NODE_ENV, REDIS_SERVER } = process.env;
+const dev = NODE_ENV === 'development';
+
+const server = http.createServer();
+let redis_server = REDIS_SERVER
+if (typeof(redis_server) == 'undefined') {
+    redis_server = 'localhost'
+} else {
+    redis_server = REDIS_SERVER;
+}
+let subscriber = redis.createClient(6379, redis_server);
 subscriber.on("message", function (channel, message) {
  console.log("Message: " + message + " on channel: " + channel + " has arrived!");
 });
 
 subscriber.subscribe("notification");
 
-const { PORT, NODE_ENV } = process.env;
-const dev = NODE_ENV === 'development';
-
-const server = http.createServer();
-
+console.log(PORT, NODE_ENV, REDIS_SERVER);
 polka({ server }) // You can also use Express
     .use(
         compression({ threshold: 0 }),
@@ -41,7 +47,9 @@ io(server).on('connection', function(socket) {
     //     socket.broadcast.emit('message', msg);
     // })
 
-
+    socket.on('button', function(msg) {
+        console.log('button msg: ', msg)
+    })
     socket.on('disconnect', function() {
         --numUsers;
         // socket.broadcast.emit('user left', numUsers);
