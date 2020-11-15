@@ -1,0 +1,29 @@
+version: '3.1'
+
+volumes: 
+  node_modules:
+  __sapper__:
+  yarn-cache:
+
+services:
+  redis:
+    image: redis:alpine
+    container_name: local-redis
+    expose:
+      - 6379
+    ports:
+      - "6379:6379"
+  web:
+    image: node:alpine
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - __sapper__:/app/__sapper__
+      - 'yarn-cache:/usr/local/share/.cache/yarn/'
+    ports: 
+      - "3000:3000"
+    command: sh -c "cd app; yarn; yarn run dev"
+    environment:
+      REDIS_SERVER: local-redis
+      # REDIS_SERVER: host.docker.internal
+
