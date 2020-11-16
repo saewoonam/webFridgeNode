@@ -39,12 +39,15 @@
         [],
         [],
         []]
+    let got_message = false;
     const socket = io();
     socket.on("message", function(message) {
         console.log("Got message:", message);
     });
     socket.on("button", function(message) {
         console.log("Got button message:", message);
+        controls = message[0]
+        got_message = true;
     });
     socket.on("mode", function(message) {
         console.log("Got mode message:", message);
@@ -59,8 +62,15 @@
         plot_data = plot_data; // need this to update svelte arrays...
     });
 
-    $: {if (mounted>1) socket.emit("button", [controls]);
-        mounted++;
+    $: {
+        if (mounted>1) {
+            if (!got_message) {
+                socket.emit("button", [controls]);
+            } else {
+                got_message = false;
+            }
+        }
+        if (!got_message) mounted++;
     }
     $:{if (manual_mode) {
         selected=1
