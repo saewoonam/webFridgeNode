@@ -24,6 +24,9 @@ subscriber.on("message", function (channel, message) {
 
 subscriber.subscribe("notification");
 
+let redis_client = redis.createClient(6379, redis_server);
+let publisher = redis.createClient(6379, redis_server);
+
 console.log(PORT, NODE_ENV, REDIS_SERVER);
 polka({ server }) // You can also use Express
     .use(
@@ -49,6 +52,22 @@ io(server).on('connection', function(socket) {
 
     socket.on('button', function(msg) {
         console.log('button msg: ', msg)
+        socket.broadcast.emit('button', msg);
+    })
+    socket.on('mode', function(msg) {
+        console.log('mode msg: ', msg)
+        publisher.publish("fridge_state",
+            msg,
+            function(){ console.log("puublished"); }
+        );
+        redis_client.set("mode", msg, redis.print);
+        redis_client.get("mode", function (err, reply) {
+            if (err) {
+                console.log(err);
+                // throw err;
+            }
+            console.log(reply.toString());
+        });
     })
     socket.on('disconnect', function() {
         --numUsers;

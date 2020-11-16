@@ -1,16 +1,20 @@
 <script>
-    import {onMount} from 'svelte';
     import Checkboxes from '../components/checkbox_list_component.svelte';
     import TempTable from '../components/temperature_table.svelte';
     import Uplot from '../components/uplot_v2.svelte';
     import io from "socket.io-client";
-    import StateSelector from '../components/state_selector.svelte';
 
-    let plot_data;
-    let title;
-    let mounted=0; // keep track of how many times the controls are updated
-    let selected;
-    let state_id = 2;
+    let v='2';
+        let table_data = {
+        '1k': 4.978491,
+        '4k':   3.070931,
+        'pump': 6.659844,
+        'switch':   17.41950,
+        'hp':   0.000000,
+        'hs':   4.000000,
+        'relays':   0,
+    }
+
     let states = [
         {id: 1, text: 'manual'},
         {id: 2, text: 'unknown'},
@@ -20,13 +24,28 @@
         {id: 6, text: 'Keep pump hot'},
         {id: 7, text: 'Cool pump'},
     ];
-
+    let selected=3;
+    let controls = [
+        { value: false, text: 'Pump on' },
+        { value: false, text: 'Switch on' },
+        { value: false, text: 'Compressor' },
+        //{ value: false, test: 'Enable heaters'}
+    ];
+    let manual_mode;
+    let mounted = 0;
+    let title = new Date().toLocaleString();
+    let plot_data = [
+        [],
+        [],
+        [],
+        []]
     const socket = io();
-
     socket.on("message", function(message) {
         console.log("Got message:", message);
     });
-
+    socket.on("button", function(message) {
+        console.log("Got button message:", message);
+    });
     socket.on("temp_data", function(new_data) {
         // console.log("temp data", new_data);
         title = new Date(new_data[0]*1000).toLocaleString();
@@ -36,44 +55,24 @@
         plot_data = plot_data; // need this to update svelte arrays...
     });
 
-    export let controls = [
-        { value: false, text: 'Pump on' },
-        { value: false, text: 'Switch on' },
-        { value: false, text: 'Compressor' },
-        //{ value: false, test: 'Enable heaters'}
-    ];
-    export let manual_mode = true;
-    $: {if (mounted>1) socket.emit("button", [manual_mode, controls]);
+    $: {if (mounted>1) socket.emit("button", [controls]);
         mounted++;
     }
-    $: {console.log('state_id', state_id)}
-    $: {console.log('selected', selected)}
-    let table_data = {
-        '1k': 4.978491,
-        '4k':   3.070931,
-        'pump': 6.659844,
-        'switch':   17.41950,
-        'hp':   0.000000,
-        'hs':   4.000000,
-        'relays':   0,
+    $:{if (manual_mode) {
+        selected=1
+    }}
+    function set_manual(value) {
+        manual_mode = value;
     }
-    title = new Date().toLocaleString();
-    plot_data = [
-        [],
-        [],
-        [],
-        []]
-    /* setInterval( () => { */
-    /*     let temp = [] */
-    /*     d = new Date(); */
-    /*     title = d.toLocaleString(); */
-    /*     for (let i=0; i<plot_data.length; i++) { */
-    /*         if(i==0) temp[0] = [...plot_data[0], Date.now()/1000]; */
-    /*         else temp[i] = [...plot_data[i], 100*Math.random()];             */
-    /*     } */
-    /*     plot_data = temp; */
-    /*     // console.log(plot_data.length, plot_data[0].length) */
-    /* }, 10000); */
+    $:{
+        if (selected>2) {
+            set_manual(false);
+            console.log('selected', selected)
+        } else {
+            set_manual(true);
+        }
+        socket.emit("mode", selected);
+    }
 </script>
 <style>
 * {
@@ -109,13 +108,21 @@
 }
 </style>
 <div class="row">
-  <div class="column side">
-    
+    <div class="column side">
+
         <TempTable table_data={table_data} title={title} />
-        <StateSelector bind:selected/>
+        <select bind:value={selected}>
+            {#each states as state}
+                <option value={state.id}>
+                    {state.text}
+                </option>
+            {/each}
+        </select>
         <Checkboxes bind:controls={controls} bind:manual_mode={manual_mode}/>
     </div>
-  <div class="column main">
+    <div class="column main">
+        hello
         <Uplot data={plot_data}/>
+
     </div>
 </div>
