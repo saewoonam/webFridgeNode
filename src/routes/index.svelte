@@ -46,6 +46,10 @@
     socket.on("button", function(message) {
         console.log("Got button message:", message);
     });
+    socket.on("mode", function(message) {
+        console.log("Got mode message:", message);
+        selected = message
+    });
     socket.on("temp_data", function(new_data) {
         // console.log("temp data", new_data);
         title = new Date(new_data[0]*1000).toLocaleString();

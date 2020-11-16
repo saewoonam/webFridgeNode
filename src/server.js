@@ -56,6 +56,7 @@ io(server).on('connection', function(socket) {
     })
     socket.on('mode', function(msg) {
         console.log('mode msg: ', msg)
+        socket.broadcast.emit('mode', msg);
         publisher.publish("fridge_state",
             msg,
             function(){ console.log("puublished"); }
