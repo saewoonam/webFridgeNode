@@ -11,6 +11,7 @@
     let uplot;
     let autox = true;
     let autoy = true;
+    let logy = 3;
     // console.log(opts)
     let y_range;
     let x_range;
@@ -63,16 +64,20 @@
     labels.forEach((item, index) => {
         opts.series[index+1].label = item;
     });
+    let mounted = false;
     onMount(async () => {
         const module = await import ('uplot');
         uPlot = module.default;
         console.log("onMount")
         uplot = new uPlot(opts,data,plotDiv); 
+        mounted = true;
     });
     afterUpdate( ()=> {
         // console.log(data)
-        if(uplot && autox && autoy) uplot.setData(data);
-        else if (uplot) uplot.setData(data, false);
+        if (mounted) {
+            if(uplot && autox && autoy) uplot.setData(data);
+            else if (uplot) uplot.setData(data, false);
+        }
     })
     function toggle_autox() {
         // console.log('autox: ', autox);
@@ -80,6 +85,18 @@
     }
     function toggle_autoy() {
         autoy = !autoy;
+    }
+    function toggle_logy() {
+        if (logy==3) {
+            logy = 1;
+        } else {
+            logy = 3;
+        }
+        opts.scales.y.distr = logy;
+        // Not sure which way is better...
+        // plotDiv.innerHTML = '';
+        plotDiv.removeChild(plotDiv.firstChild)
+        uplot = new uPlot(opts,data,plotDiv); 
     }
     function saveCanvas()  {
         var canvas = document.querySelector(".u-wrap > canvas:nth-child(2)");
@@ -149,7 +166,6 @@
 <style>
 button {
     font-size: 18px;
-    margin: 10px;
     }
 </style>
 
@@ -169,6 +185,14 @@ button {
   enable
   {/if}
   autoscale y
+</button>
+<button on:click={toggle_logy}>
+  {#if logy==3}
+  linear
+  {:else}
+  log
+  {/if}
+  y
 </button>
 <button on:click={saveCanvas}>
   PNG
