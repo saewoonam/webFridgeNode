@@ -4,7 +4,8 @@
   let plotDiv;
   let plot;
   afterUpdate( ()=> {
-    if(plot) plot.setData(data);
+    //if(plot) plot.setData(data);
+    if (plot) plot.redraw(plot);
   })
 
   onMount(() => {
@@ -80,9 +81,19 @@
     title: "My Chart",
     width: 600,
     height: 400,
-    plugins: [
-      legendAsTooltipPlugin(),
-    ],
+    /* plugins: [ */
+    /*   legendAsTooltipPlugin(), */
+    /* ], */
+    /*
+    scales: {
+        x:{
+          auto: true,
+        },
+        y: {
+          auto: true,
+        }
+      },
+     */
     series: [
       {},
       {

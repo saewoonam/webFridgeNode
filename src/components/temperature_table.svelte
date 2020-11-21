@@ -9,10 +9,14 @@
     hs: 4.000000,
     relays: 0,
   }
-  let table_array = []
-  for (let key in table_data) {
-    let value = Number.isInteger(table_data[key]) ? table_data[key] : table_data[key].toFixed(2)
-    table_array.push({name: key, value:value})
+  let table_array;
+  $: {
+    table_array = []
+    for (let key in table_data) {
+      let value = Number(table_data[key]);
+      value = Number.isInteger(value) ? value : value.toFixed(2)
+      table_array.push({name: key, value:value})
+    }
   }
 </script>
 <style>

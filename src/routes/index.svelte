@@ -1,45 +1,25 @@
 <script>
     import Checkboxes from '../components/checkbox_list_component.svelte';
     import TempTable from '../components/temperature_table.svelte';
-    import Uplot from '../components/uplot_v2.svelte';
+    import Uplot from '../components/uplot_v3.svelte';
     import io from "socket.io-client";
+    import Timepicker from '../components/timepicker.svelte';
 
-    let v='2';
-        let table_data = {
-        '1k': 4.978491,
-        '4k':   3.070931,
-        'pump': 6.659844,
-        'switch':   17.41950,
-        'hp':   0.000000,
-        'hs':   4.000000,
-        'relays':   0,
-    }
-
-    let states = [
-        {id: 1, text: 'manual'},
-        {id: 2, text: 'unknown'},
-        {id: 3, text: 'warming to 300K'},
-        {id: 4, text: 'cooling to 4K'},
-        {id: 5, text: 'Warm pump'},
-        {id: 6, text: 'Keep pump hot'},
-        {id: 7, text: 'Cool pump'},
-    ];
+    import {table_data_default, controls_default, states_default} from '../tools/defaults.js';
+    let table_data = table_data_default;
+    let states = states_default;
     let selected=3;
-    let controls = [
-        { value: false, text: 'Pump on' },
-        { value: false, text: 'Switch on' },
-        { value: false, text: 'Compressor' },
-        //{ value: false, test: 'Enable heaters'}
-    ];
+    let controls = controls_default;
     let manual_mode;
     let mounted = 0;
     let title = new Date().toLocaleString();
-    let plot_data = [
-        [],
-        [],
-        [],
-        []]
+    let plot_data = [ [] ]
     let got_message = false;
+    let hide_advanced = true;
+    let auto_recycle = true;
+    let plot_keys = ['1k', '4k', '40k', 'pump', 'switch']
+
+    plot_keys.forEach(item=> plot_data.push([]));
     const socket = io();
     socket.on("message", function(message) {
         console.log("Got message:", message);
@@ -53,13 +33,23 @@
         console.log("Got mode message:", message);
         selected = message
     });
-    socket.on("temp_data", function(new_data) {
-        // console.log("temp data", new_data);
-        title = new Date(new_data[0]*1000).toLocaleString();
+    socket.on("temp_data", function(temperatures) {
+        // Update plot
+        let temp = [temperatures['Time']];
+        title = new Date(temp[0]*1000).toLocaleString();
+        plot_keys.forEach( (key) => {
+          temp.push(temperatures[key])
+        });
         for (let i=0; i<plot_data.length; i++) {
-            plot_data[i].push(new_data[i]);
+            plot_data[i].push(temp[i]);
         }
         plot_data = plot_data; // need this to update svelte arrays...
+        // Update table
+        for (const key in table_data) {
+          table_data_default[key] = temperatures[key];
+        }
+        table_data = table_data_default
+        // console.log(table_data, table_data_default)
     });
 
     $: {
@@ -120,23 +110,37 @@
     width: 100%;
   }
 }
+
+button {
+    font-size: 18px;
+    margin: 10px;
+    }
 </style>
 <div class="row">
     <div class="column side">
 
         <TempTable table_data={table_data} title={title} />
-        <select bind:value={selected}>
-            {#each states as state}
-                <option value={state.id}>
-                    {state.text}
-                </option>
-            {/each}
-        </select>
-        <Checkboxes bind:controls={controls} bind:manual_mode={manual_mode}/>
-    </div>
-    <div class="column main">
-        hello
-        <Uplot data={plot_data}/>
+        <div hidden={hide_advanced}>
+            <select bind:value={selected}>
+                {#each states as state}
+                    <option value={state.id}>
+                        {state.text}
+                    </option>
+                {/each}
+            </select>
+            <Checkboxes bind:controls={controls} bind:manual_mode={manual_mode}/>
+        </div>
+        <label>
+            <input type=checkbox bind:checked={auto_recycle} >
+                &nbsp&nbsp Auto recycle
+            </label>
+        <Timepicker disabled={!auto_recycle}/>
+        <div>
+            <button> Recycle Now </button>
+        </div>
 
+</div>
+    <div class="column main">
+        <Uplot data={plot_data} labels={plot_keys}/>
     </div>
 </div>

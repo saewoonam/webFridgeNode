@@ -1,7 +1,8 @@
 {
-  "name": "sapper-chat",
-  "description": "sapper-chat",
+  "name": "node-web-fridge",
+  "description": "node version to control fridges",
   "version": "0.0.1",
+  "license": "MIT",
   "scripts": {
     "dev": "sapper dev",
     "build": "sapper build --legacy",
@@ -9,14 +10,17 @@
     "start": "node __sapper__/build"
   },
   "dependencies": {
+    "better-sqlite3": "^7.1.1",
     "compression": "^1.7.1",
-    "file-saver": "^2.0.2",
+    "file-saver": "^2.0.5",
+    "fuse.js": "^6.4.3",
     "polka": "next",
     "redis": "^3.0.2",
     "sirv": "^1.0.0",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
-    "uplot": "^1.3.0"
+    "svelte-flatpickr": "^3.1.0",
+    "uplot": "^1.4.2"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",

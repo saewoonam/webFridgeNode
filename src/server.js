@@ -17,15 +17,35 @@ if (typeof(redis_server) == 'undefined') {
 } else {
     redis_server = REDIS_SERVER;
 }
-let subscriber = redis.createClient(6379, redis_server);
-subscriber.on("message", function (channel, message) {
- console.log("Message: " + message + " on channel: " + channel + " has arrived!");
-});
-
-subscriber.subscribe("notification");
 
 let redis_client = redis.createClient(6379, redis_server);
 let publisher = redis.createClient(6379, redis_server);
+let subscriber = redis.createClient(6379, redis_server); // seems to need a client for each task
+
+subscriber.on("message", function (channel, message) {
+    // console.log("Message: " + message + " on channel: " + channel + " has arrived!");
+    if (channel=="notifications") {
+        socket_list.forEach(socket => socket.emit('message', "Message server sub"))
+        let temp = [Date.now()/1000]
+        for (let i=1; i<4; i++) {
+            temp.push(100*Math.random());
+        }
+        socket_list.forEach(socket => socket.emit('temp_data', temp))
+    } else if (channel == "temperatures") {
+        let temperatures = JSON.parse(message)
+        // let values = Object.values(temperatures)
+        // let temp = [values[0]]
+        // for (let i=1; i<4; i++) {
+        //     temp.push(values[2+i]);
+        // }
+        // console.log(temp);
+        socket_list.forEach(socket => socket.emit('temp_data', temperatures))
+    }
+});
+
+subscriber.subscribe("notification");
+subscriber.subscribe("temperatures");
+
 
 console.log(PORT, NODE_ENV, REDIS_SERVER);
 polka({ server }) // You can also use Express
@@ -39,9 +59,12 @@ polka({ server }) // You can also use Express
     });
 
 let numUsers = 0;
+let socket_list = [];
 
 io(server).on('connection', function(socket) {
     ++numUsers;
+    socket_list.push(socket);
+    console.log("Got connection, numUsers", numUsers, socket_list.length);
     let message = 'Server: A new user has joined the chat';
     socket.emit('message', 'connected: '+numUsers);
     // socket.broadcast.emit('user joined', { message, numUsers });
@@ -59,7 +82,7 @@ io(server).on('connection', function(socket) {
         socket.broadcast.emit('mode', msg);
         publisher.publish("fridge_state",
             msg,
-            function(){ console.log("puublished"); }
+            function(){ console.log("published"); }
         );
         redis_client.set("mode", msg, redis.print);
         redis_client.get("mode", function (err, reply) {
@@ -72,21 +95,26 @@ io(server).on('connection', function(socket) {
     })
     socket.on('disconnect', function() {
         --numUsers;
-        // socket.broadcast.emit('user left', numUsers);
+        let index = socket_list.indexOf(socket);
+        if (index > -1) {
+          socket_list.splice(index, 1);
+        }
+        console.log('someone disconnected, numUsers:', numUsers, socket_list.length);
     })
 
     // socket.on('user disconnect', function(name) {
     //     socket.broadcast.emit('message', `Server: ${name} has left the chat.`)
     // })
     // console.log(socket);
-    setInterval(function(){ 
-        // console.log("emit interval message");
-        let temp = [Date.now()/1000]
-        for (let i=1; i<4; i++) {
-            temp.push(100*Math.random());
-        }
-        if(numUsers>0) socket.emit('temp_data', temp);
-    }, 3000);
+
+    // setInterval(function(){ 
+    //     // console.log("emit interval message");
+    //     let temp = [Date.now()/1000]
+    //     for (let i=1; i<4; i++) {
+    //         temp.push(100*Math.random());
+    //     }
+    //     if(numUsers>0) socket.emit('temp_data', temp);
+    // }, 3000);
 });
 
 
