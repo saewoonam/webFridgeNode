@@ -47,7 +47,7 @@ subscriber.subscribe("notification");
 subscriber.subscribe("temperatures");
 
 
-console.log(PORT, NODE_ENV, REDIS_SERVER);
+// console.log(PORT, NODE_ENV, REDIS_SERVER);
 polka({ server }) // You can also use Express
     .use(
         compression({ threshold: 0 }),
@@ -72,7 +72,10 @@ io(server).on('connection', function(socket) {
     // socket.on('message', function(msg) {
     //     socket.broadcast.emit('message', msg);
     // })
-
+    redis_client.lrange('plot_keys', 0, -1, function(err, reply) {
+        let plot_keys = reply;
+        socket.emit('plot_keys', plot_keys);
+    })
     socket.on('button', function(msg) {
         console.log('button msg: ', msg)
         socket.broadcast.emit('button', msg);
@@ -82,15 +85,16 @@ io(server).on('connection', function(socket) {
         socket.broadcast.emit('mode', msg);
         publisher.publish("fridge_state",
             msg,
-            function(){ console.log("published"); }
+            function(){ console.log("published fridge state"); }
         );
-        redis_client.set("mode", msg, redis.print);
+        // redis_client.set("mode", msg, redis.print);
+        redis_client.set("mode", msg);
         redis_client.get("mode", function (err, reply) {
             if (err) {
                 console.log(err);
                 // throw err;
             }
-            console.log(reply.toString());
+            console.log('get mode after set', reply.toString());
         });
     })
     socket.on('disconnect', function() {

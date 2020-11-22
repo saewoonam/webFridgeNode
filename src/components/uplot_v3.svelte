@@ -1,14 +1,16 @@
 <script>
     import { onMount, afterUpdate } from 'svelte';
     import {data_config, opts_config, colors} from '../tools/uplot_v3_config.js'
-    // import uPlot from 'uplot';
+    import SvgIcon from '../components/SvgIcon.svelte'
+    import {bellIcon, download, home, png} from '../components/AppIcons.js'
     import filesaver from 'file-saver';
-    let uPlot;
     export let data = data_config;
     export let opts = opts_config;
     export let labels = ['y0', 'y1']
     let plotDiv;
+    let uPlot;
     let uplot;
+    let html2canvas;
     let autox = true;
     let autoy = true;
     let logy = 3;
@@ -50,7 +52,25 @@
     opts['plugins'] =  [ 
        legendAsTooltipPlugin(),
      ]
-
+    opts.cursor.bind.dblclick = (u, targ, handler) => {
+        return e => {
+            console.log('in dblclick')
+            autox = true;
+            autoy= true;
+            handler(e)              
+        } 
+    }
+    opts.cursor.bind.mousemove = (u, targ, handler) => {
+        return e => {
+            if (e.buttons==1) {
+                autox = false;
+                autoy = false;
+                // console.log(e)
+                // console.log('mousemove button', e.button, 'buttons', e.buttons);
+            }
+            handler(e)
+        }
+    }
     let s = [{}]
     for (let i=0; i<data.length-1; i++) {
         s.push({
@@ -61,30 +81,43 @@
         })
     }
     opts.series = s;
+    // console.log('opts.series', opts.series)
+    // console.log('labels', labels);
     labels.forEach((item, index) => {
-        opts.series[index+1].label = item;
+        opts.series[index].label = item;
     });
     let mounted = false;
     onMount(async () => {
         const module = await import ('uplot');
         uPlot = module.default;
-        console.log("onMount")
+        console.log("uplot onMount")
         uplot = new uPlot(opts,data,plotDiv); 
         mounted = true;
+        /*
+        const m = await import ('html2canvas');
+        html2canvas = m.default;
+        console.log(html2canvas)
+         */
     });
+    //$: {console.log('data changed into uPlot, data.length', data.length);}
+    //  $: {console.log('labels changed into uPlot, label.length', labels.length);}
     afterUpdate( ()=> {
-        // console.log(data)
+        // console.log('afterUpdate data[0].length', data[0].length)
         if (mounted) {
             if(uplot && autox && autoy) uplot.setData(data);
             else if (uplot) uplot.setData(data, false);
         }
     })
     function toggle_autox() {
-        // console.log('autox: ', autox);
         autox = !autox;
     }
     function toggle_autoy() {
         autoy = !autoy;
+    }
+    function resetAxis() {
+        autox = true;
+        autoy = true;
+        uplot.setData(data)
     }
     function toggle_logy() {
         if (logy==3) {
@@ -96,7 +129,9 @@
         // Not sure which way is better...
         // plotDiv.innerHTML = '';
         plotDiv.removeChild(plotDiv.firstChild)
+        // console.log('toggle_logy', data.length);
         uplot = new uPlot(opts,data,plotDiv); 
+
     }
     function saveCanvas()  {
         var canvas = document.querySelector(".u-wrap > canvas:nth-child(2)");
@@ -104,6 +139,14 @@
         canvas.toBlob(function(blob) {
             filesaver.saveAs(blob, "uplot.png");
         });
+    }
+    function saveCanvas2() {
+            html2canvas(plotDiv).then(canvas => {
+                    document.body.appendChild(canvas)
+            });
+    }
+    function downloadData() {
+        console.log("Download file");
     }
     function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255, 249, 196, 0.92)", color: "black" } } = {}) {
         let legendEl;
@@ -170,21 +213,8 @@ button {
 </style>
 
 <link rel="stylesheet" href="https://leeoniya.github.io/uPlot/dist/uPlot.min.css">
-<button on:click={toggle_autox}>
-  {#if autox}
-  disable
-  {:else}
-  enable
-  {/if}
-  autoscale x
-</button>
-<button on:click={toggle_autoy}>
-  {#if autoy}
-  disable
-  {:else}
-  enable
-  {/if}
-  autoscale y
+<button on:click={resetAxis}>
+  <SvgIcon d={home} />
 </button>
 <button on:click={toggle_logy}>
   {#if logy==3}
@@ -195,7 +225,10 @@ button {
   y
 </button>
 <button on:click={saveCanvas}>
-  PNG
+    <SvgIcon d={png} />
+</button>
+<button disabled on:click={downloadData}>
+    <SvgIcon d={download} />
 </button>
 <div bind:this={plotDiv}></div>
 
