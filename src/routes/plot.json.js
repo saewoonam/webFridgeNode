@@ -18,18 +18,6 @@ if (typeof(redis_server) == 'undefined') {
 
 let redis_client = redis.createClient(6379, redis_server);
 // console.log(redis_client)
-/*
- * Use this to set up plot_keys
- *
-function store_key_list(client, name, keys) {
-    client.del(name)
-    for (const key of keys) {
-        client.rpush(name, key)
-    }
-}
-const keys = ['Time', '1k', '4k', '40k', 'pump', 'switch'];
-store_key_list(redis_client, 'plot_keys', keys)
-*/
 export function get(req, res, next) {
     redis_client.lrange('plot_keys', 0, -1, function(err, reply) {
         let plot_keys = reply;
@@ -41,12 +29,15 @@ export function get(req, res, next) {
             return item; 
         });
         let all = [];
+        let table_col_names = db.pragma('table_info(fridge)').map(item=>item.name)
+        // console.log('table_info', table_col_names);
         for (const key of keys) {
+            let stuff = [];
             let select = `SELECT ${key} FROM fridge;`
             // console.log('select cmd: ', select);
             select = db.prepare(select);
             select.raw()
-            let stuff = select.all()
+            stuff = select.all()
             stuff = [].concat(...stuff)
             // console.log(stuff[0]);
             all.push(stuff)
