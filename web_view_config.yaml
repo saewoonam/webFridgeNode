@@ -1,0 +1,16 @@
+plot_keys:
+  - Time
+  - 1k
+  - 4k
+  - 40k
+  - pump
+  - switch
+table_keys:
+  - 1k
+  - 4k
+  - 40k
+  - pump
+  - switch
+  - hp
+  - hs
+  - relays

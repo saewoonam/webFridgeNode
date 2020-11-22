@@ -1,7 +1,10 @@
 <script>
     import { onMount, afterUpdate } from 'svelte';
     import {data_config, opts_config, colors} from '../tools/uplot_v3_config.js'
+    import {downloadBlob} from '../tools/download.js'
     import SvgIcon from '../components/SvgIcon.svelte'
+    import LogIcon from '../components/LogIcon.svelte'
+    import LinIcon from '../components/LinIcon.svelte'
     import {bellIcon, download, home, png} from '../components/AppIcons.js'
     import filesaver from 'file-saver';
     export let data = data_config;
@@ -147,6 +150,9 @@
     }
     function downloadData() {
         console.log("Download file");
+        const filename = 'fridge.json';
+        const blob = new Blob([JSON.stringify(data)], {type : 'application/json'});
+        downloadBlob(blob, filename);
     }
     function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255, 249, 196, 0.92)", color: "black" } } = {}) {
         let legendEl;
@@ -212,24 +218,25 @@ button {
     }
 </style>
 
-<link rel="stylesheet" href="https://leeoniya.github.io/uPlot/dist/uPlot.min.css">
-<button on:click={resetAxis}>
-  <SvgIcon d={home} />
-</button>
-<button on:click={toggle_logy}>
-  {#if logy==3}
-  linear
-  {:else}
-  log
-  {/if}
-  y
-</button>
-<button on:click={saveCanvas}>
-    <SvgIcon d={png} />
-</button>
-<button disabled on:click={downloadData}>
-    <SvgIcon d={download} />
-</button>
-<div bind:this={plotDiv}></div>
+    <link rel="stylesheet" href="https://leeoniya.github.io/uPlot/dist/uPlot.min.css">
+    <div>
+        <button on:click={resetAxis}>
+            <SvgIcon d={home} />
+        </button>
+        <button on:click={toggle_logy}>
+            {#if logy==3}
+                <LinIcon />
+            {:else}
+                <LogIcon />
+            {/if}
+        </button>
+        <button on:click={saveCanvas}>
+            <SvgIcon d={png} />
+        </button>
+        <button on:click={downloadData}>
+            <SvgIcon d={download} />
+        </button>
+    </div>
+    <div bind:this={plotDiv}></div>
 
 

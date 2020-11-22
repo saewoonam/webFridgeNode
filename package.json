@@ -15,6 +15,7 @@
     "file-saver": "^2.0.5",
     "fuse.js": "^6.4.3",
     "html2canvas": "^1.0.0-rc.7",
+    "js-yaml": "^3.14.0",
     "polka": "next",
     "redis": "^3.0.2",
     "sirv": "^1.0.0",

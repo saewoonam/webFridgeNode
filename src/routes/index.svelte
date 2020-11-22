@@ -2,11 +2,11 @@
   <title>nodeWebFridge</title>
 </svelte:head>
 <script>
+    import io from "socket.io-client";
     import Checkboxes from '../components/checkbox_list_component.svelte';
     import TempTable from '../components/temperature_table.svelte';
-    import Uplot from '../components/uplot_v3.svelte';
-    import io from "socket.io-client";
     import Timepicker from '../components/timepicker.svelte';
+    import Uplot from '../components/uplot_v3.svelte';
     import {table_data_default, controls_default, states_default} from '../tools/defaults.js';
     import {onMount} from 'svelte';
     let table_data = table_data_default;
@@ -21,6 +21,7 @@
     let hide_advanced = true;
     let auto_recycle = true;
     let plot_keys = [];
+    let table_keys = [];
     let plot_ready = false;
     let got_plot_data = false;
     let got_plot_keys = false;
@@ -47,6 +48,15 @@
         got_plot_keys = true;
     });
 
+    socket.on("table_keys", function (keys) {
+        console.log("got table_keys: ", keys);
+        table_keys = keys;
+        // got_table_keys = true;
+        let temp = {}
+        table_keys.forEach(item=>temp[item]=-1)
+        table_data = temp;
+    });
+
     socket.on("button", function(message) {
         console.log("Got button message:", message);
         controls = message[0]
@@ -70,10 +80,13 @@
         }
         plot_data = plot_data; // need this to update svelte arrays...
         // Update table
+        /*
         for (const key in table_data) {
           table_data_default[key] = temperatures[key];
         }
-        table_data = table_data_default
+         */
+        table_keys.forEach(key => table_data[key] = temperatures[key]);
+        table_data = table_data;
         // console.log(table_data, table_data_default)
     });
 

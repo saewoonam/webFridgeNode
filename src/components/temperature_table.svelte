@@ -11,12 +11,15 @@
   }
   let table_array;
   $: {
+    // console.log('table_data', table_data, Object.keys(table_data))
     table_array = []
     for (let key in table_data) {
       let value = Number(table_data[key]);
-      value = Number.isInteger(value) ? value : value.toFixed(2)
+      value = Number.isInteger(value) ? value : value.toPrecision(4)
       table_array.push({name: key, value:value})
+      // console.log('key', key);
     }
+    // console.log('table_array', table_array);
   }
 </script>
 <style>

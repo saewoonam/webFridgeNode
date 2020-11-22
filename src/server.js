@@ -5,7 +5,8 @@ import * as sapper from '@sapper/server';
 import http from 'http';
 import io from 'socket.io';
 import redis from 'redis';
-
+import yaml from 'js-yaml';
+import fs from 'fs';
 
 const { PORT, NODE_ENV, REDIS_SERVER } = process.env;
 const dev = NODE_ENV === 'development';
@@ -22,6 +23,42 @@ let redis_client = redis.createClient(6379, redis_server);
 let publisher = redis.createClient(6379, redis_server);
 let subscriber = redis.createClient(6379, redis_server); // seems to need a client for each task
 
+function store_key_list(client, name, keys) {
+    // Use this to store lists in redis database
+    client.del(name)
+    for (const key of keys) {
+        client.rpush(name, key)
+    }
+}
+
+/*
+const keys = ['Time', '1k', '4k', '40k', 'pump', 'switch'];
+store_key_list(redis_client, 'plot_keys', keys)
+
+const keys = ['1k', '4k', '40k', 'pump', 'switch', 'hp', 'hs', 'relays'];
+store_key_list(redis_client, 'table_keys', keys)
+*/
+// write config ... first time not needed anymore
+/*
+redis_client.lrange('plot_keys', 0, -1, function(err, reply) {
+    let y = {'plot_keys':reply}
+    // console.log(yaml.safeDump(y))
+    fs.appendFileSync('./web_view_config.yaml',yaml.safeDump(y))
+})
+
+redis_client.lrange('table_keys', 0, -1, function(err, reply) {
+    let y = {'table_keys':reply}
+    fs.appendFileSync('./web_view_config.yaml',yaml.safeDump(y))
+    // console.log(yaml.safeDump(y))
+})
+*/
+let yaml_filename = './web_view_config.yaml';
+let config = yaml.safeLoad(fs.readFileSync(yaml_filename))
+console.log(config)
+for (const key in config) {
+    store_key_list(redis_client, key, config[key])
+}
+
 subscriber.on("message", function (channel, message) {
     // console.log("Message: " + message + " on channel: " + channel + " has arrived!");
     if (channel=="notifications") {
@@ -33,12 +70,6 @@ subscriber.on("message", function (channel, message) {
         socket_list.forEach(socket => socket.emit('temp_data', temp))
     } else if (channel == "temperatures") {
         let temperatures = JSON.parse(message)
-        // let values = Object.values(temperatures)
-        // let temp = [values[0]]
-        // for (let i=1; i<4; i++) {
-        //     temp.push(values[2+i]);
-        // }
-        // console.log(temp);
         socket_list.forEach(socket => socket.emit('temp_data', temperatures))
     }
 });
@@ -75,6 +106,10 @@ io(server).on('connection', function(socket) {
     redis_client.lrange('plot_keys', 0, -1, function(err, reply) {
         let plot_keys = reply;
         socket.emit('plot_keys', plot_keys);
+    })
+    redis_client.lrange('table_keys', 0, -1, function(err, reply) {
+        let table_keys = reply;
+        socket.emit('table_keys', table_keys);
     })
     socket.on('button', function(msg) {
         console.log('button msg: ', msg)
