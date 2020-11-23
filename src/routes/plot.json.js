@@ -51,8 +51,7 @@ export function get(req, res, next) {
                     stuff = [].concat(...stuff)
                     done = true;
                 } catch (err) {
-                    console.log('got error:', err.name);
-					console.log('\n\n\n, try again:\n');
+                    console.log('got error:', err);
                 }
             } while (!done);
             // console.log(stuff[0]);
