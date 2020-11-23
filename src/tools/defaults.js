@@ -1,7 +1,7 @@
 export let table_data_default = {
     '1k': -1,
     '4k':   3.070931,
-//    '40k': -1,
+    '40k': -1,
     'pump': 6.659844,
     'switch':   17.41950,
     'hp':   0.000000,

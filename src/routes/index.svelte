@@ -7,6 +7,7 @@
     import TempTable from '../components/temperature_table.svelte';
     import Timepicker from '../components/timepicker.svelte';
     import Uplot from '../components/uplot_v3.svelte';
+    import Loader from '../components/Loader.svelte';
     import {table_data_default, controls_default, states_default} from '../tools/defaults.js';
     import {onMount} from 'svelte';
     let table_data = table_data_default;
@@ -87,7 +88,6 @@
          */
         table_keys.forEach(key => table_data[key] = temperatures[key]);
         table_data = table_data;
-        // console.log(table_data, table_data_default)
     });
 
     $: {
@@ -179,6 +179,7 @@ button {
 
 </div>
     <div class="column main">
+        <Loader loading={!got_plot_data || !got_plot_keys} />
         {#if got_plot_data && got_plot_keys}
             <Uplot data={plot_data} labels={plot_keys}/>
         {/if}
