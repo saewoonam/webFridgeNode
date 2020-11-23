@@ -1,7 +1,14 @@
 // routes/plot.json.js
 const sqlite3 = require('better-sqlite3');
 // let db = new sqlite3('./db/fridge_data.db');
-let db = new sqlite3('../../node-fridge-logger/fridge_data.db');
+// let db = new sqlite3('../../node-fridge-logger/fridge_data.db');
+let db;
+try {
+   db = new sqlite3('../node-fridge-logger/fridge_data.db');
+} catch (err) {
+     console.log(err)
+     db = new sqlite3('../../node-fridge-logger/fridge_data.db');
+}
 // console.log(db)
 // let select = db.prepare('SELECT Time, _1k FROM fridge;')
 // let stuff = select.all()
@@ -35,10 +42,18 @@ export function get(req, res, next) {
             let stuff = [];
             let select = `SELECT ${key} FROM fridge;`
             // console.log('select cmd: ', select);
-            select = db.prepare(select);
-            select.raw()
-            stuff = select.all()
-            stuff = [].concat(...stuff)
+            let done = false;
+            do {
+                try {
+                    select = db.prepare(select);
+                    select.raw()
+                    stuff = select.all()
+                    stuff = [].concat(...stuff)
+                    done = true;
+                } catch (err) {
+                    console.log('got error:', err);
+                }
+            } while (!done);
             // console.log(stuff[0]);
             all.push(stuff)
         }
