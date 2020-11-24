@@ -60,17 +60,18 @@ export function get(req, res, next) {
         }
         */
         let select = keys.join(', ')
-        let statement = db.prepare(`SELECT ${select} from fridge;`);
-        statement.raw();
+        let statement;
         let hrstart = process.hrtime()
         let done = false;
         let data;
         do {
             try {
+                statement = db.prepare(`SELECT ${select} from fridge;`);
+                statement.raw();
                 data = statement.all();
                 done = true;
             } catch (err) {
-                console.log('sqlite3 all error:', err);
+                console.log('sqlite3 error:', err);
             }
         } while (!done);
         console.log(process.hrtime(hrstart)[1]/1e9)
