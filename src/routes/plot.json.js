@@ -38,6 +38,7 @@ export function get(req, res, next) {
         let all = [];
         // let table_col_names = db.pragma('table_info(fridge)').map(item=>item.name)
         // console.log('table_info', table_col_names);
+        /*
         for (const key of keys) {
             let stuff = [];
             let select = `SELECT ${key} FROM fridge;`
@@ -57,6 +58,29 @@ export function get(req, res, next) {
             // console.log(stuff[0]);
             all.push(stuff)
         }
+        */
+        let select = keys.join(', ')
+        let statement = db.prepare(`SELECT ${select} from fridge;`);
+        statement.raw();
+        let hrstart = process.hrtime()
+        let done = false;
+        let data;
+        do {
+            try {
+                data = statement.all();
+                done = true;
+            } catch (err) {
+                console.log('sqlite3 all error:', err);
+            }
+        } while (!done);
+        console.log(process.hrtime(hrstart)[1]/1e9)
+
+        console.log(data.length)
+        hrstart = process.hrtime()
+        all = data[0].map((_, colIndex) => data.map(row => row[colIndex]));
+        console.log(process.hrtime(hrstart)[1]/1e9)
+        console.log(all.length)
+
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(all));
     });
