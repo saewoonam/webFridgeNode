@@ -36,13 +36,13 @@ export function get(req, res, next) {
             return item; 
         });
         let all = [];
-        let table_col_names = db.pragma('table_info(fridge)').map(item=>item.name)
+        // let table_col_names = db.pragma('table_info(fridge)').map(item=>item.name)
         // console.log('table_info', table_col_names);
         /*
         for (const key of keys) {
             let stuff = [];
             let select = `SELECT ${key} FROM fridge;`
-            // console.log('select cmd: ', select);
+            console.log('select cmd: ', select);
             let done = false;
             do {
                 try {
