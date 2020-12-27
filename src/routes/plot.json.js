@@ -2,9 +2,18 @@
 const sqlite3 = require('better-sqlite3');
 // let db = new sqlite3('./db/fridge_data.db');
 // let db = new sqlite3('../../node-fridge-logger/fridge_data.db');
+const {DATA_PATH} = process.env
+let data_filename
+
+if (typeof(DATA_PATH) == 'undefined') {
+  data_filename = '../node-fridge-logger/fridge_data.db';
+} else {
+	data_filename = DATA_PATH+'/fridge_data.db';
+}
 let db;
 try {
-   db = new sqlite3('../node-fridge-logger/fridge_data.db');
+//   db = new sqlite3('../node-fridge-logger/fridge_data.db');
+   db = new sqlite3(data_filename);
 } catch (err) {
      console.log(err)
      db = new sqlite3('../../node-fridge-logger/fridge_data.db');
