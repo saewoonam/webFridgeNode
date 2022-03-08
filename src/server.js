@@ -18,6 +18,7 @@ if (typeof(redis_server) == 'undefined') {
 } else {
     redis_server = REDIS_SERVER;
 }
+console.log("REDIS_SERVER:  ", redis_server);
 
 let redis_client = redis.createClient(6379, redis_server);
 let publisher = redis.createClient(6379, redis_server);
