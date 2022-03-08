@@ -10,7 +10,7 @@
     "start": "node __sapper__/build"
   },
   "dependencies": {
-    "better-sqlite3": "^7.1.1",
+    "better-sqlite3": "^7.4.3",
     "compression": "^1.7.1",
     "file-saver": "^2.0.5",
     "fuse.js": "^6.4.3",

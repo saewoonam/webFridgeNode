@@ -168,6 +168,9 @@ button {
             </select>
             <Checkboxes bind:controls={controls} bind:manual_mode={manual_mode}/>
         </div>
+        <div hidden = {!hide_advanced}>
+            Fridge State:<br> {states[selected].text}
+        </div>
         <label>
             <input type=checkbox bind:checked={auto_recycle} >
                 &nbsp&nbsp Auto recycle
